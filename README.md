@@ -1,7 +1,8 @@
-# 🤖 CalendarVA Bot
+# 🤖  Calendar-Bot
 
-> **Tu calendario personal, hablándote directamente por Telegram.**  
-> Sin apps extra. Sin suscripciones. Sin complicaciones.
+> **Automatiza tu calendario y recíbelo en Telegram.**  
+> Recibe tus eventos automáticamente, sin instalar apps ni pagar suscripciones.
+Simple, rápido y siempre a mano.
 
 ---
 
