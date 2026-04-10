@@ -2,8 +2,7 @@
 
 **Automatiza tu calendario y recíbelo en Telegram.**
 
-Recibe tus eventos automáticamente, sin instalar apps ni pagar suscripciones.
-Simple, rápido y siempre a mano.
+Automatización 100% gratuita que envía tus eventos directamente a Telegram, manteniéndote al día con tu calendario sin apps extra, sin suscripciones y sin complicaciones.
 
 ---
 
