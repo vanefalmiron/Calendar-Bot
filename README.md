@@ -1,6 +1,7 @@
 # 🤖  CalendarBot — Automatización con calendario
 
-> **Automatiza tu calendario y recíbelo en Telegram.**  
+> **Automatiza tu calendario y recíbelo en Telegram.**
+
 Recibe tus eventos automáticamente, sin instalar apps ni pagar suscripciones.
 Simple, rápido y siempre a mano.
 
