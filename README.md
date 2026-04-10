@@ -1,287 +1,211 @@
-# 🤖 Bot Calendario → Telegram
+# 🤖 CalendarVA Bot
 
-Automatización personal conectada a Google Calendar que envía notificaciones a Telegram con dos funcionalidades: recordatorio de cumpleaños con mensaje sugerido y resumen semanal de actividades.
-
-**Stack:** Google Apps Script · Google Calendar API · Telegram Bot API  
-**Coste:** 0 € / mes  
-**Sin servidor, sin tarjeta, sin instalaciones**
+> **Tu calendario personal, hablándote directamente por Telegram.**  
+> Sin apps extra. Sin suscripciones. Sin complicaciones.
 
 ---
 
-## ¿Qué hace?
+## ¿De qué va esto?
 
-### 🎂 Recordatorio de cumpleaños
-Cada mañana el bot revisa tu Google Calendar buscando eventos que contengan la palabra **"cumple"** (ej: "cumple Vanessa" o "Vanessa cumple"). Si encuentra alguno, envía una notificación a Telegram con el nombre de la persona y un mensaje de felicitación listo para copiar y pegar.
+Olvídate de abrir el calendario cada mañana para ver qué tienes. Este bot lo hace por ti — revisa tus eventos, detecta lo que importa y te lo manda directamente a Telegram cuando toca.
 
-### 📅 Resumen semanal
-Cada lunes envía un resumen con todos los eventos de los próximos 7 días, clasificados automáticamente con emojis según el tipo de evento (viaje, examen, reunión, médico, gym…).
+Dos cosas concretas que resuelve:
 
----
+**🎂 Nunca más olvidar un cumpleaños**  
+El bot escanea tu calendario cada mañana. Si alguien cumple años ese día, te avisa con el nombre de la persona y un mensaje de felicitación ya redactado, listo para copiar y enviar. Cero esfuerzo mental.
 
-## Requisitos previos
-
-- Cuenta de Google (Gmail)
-- App de Telegram instalada
-- Acceso a [script.google.com](https://script.google.com)
+**📅 La semana, de un vistazo, cada lunes**  
+Antes de que empiece la semana, recibes un resumen con todos tus eventos ordenados y clasificados por tipo — viajes, exámenes, reuniones, citas médicas, gym… Para arrancar el lunes con todo claro.
 
 ---
 
-## Paso 1 — Crear el bot de Telegram
+## Por qué mola
 
-1. Abre Telegram y busca **@BotFather**
-2. Envía el comando `/newbot`
-3. Sigue las instrucciones: elige nombre y username para el bot
-4. BotFather te dará un **token** con este formato:
-   ```
-   123456789:AAExxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-   ```
-5. Guarda ese token, lo necesitarás más adelante
-
-### Obtener tu Chat ID
-
-1. Busca **@userinfobot** en Telegram y pulsa Start
-2. Te responderá automáticamente con tu `id` numérico
-3. Guarda ese número
+- **Coste total: 0 €** — ni tarjeta, ni servidor, ni suscripción
+- **Sin instalaciones** — todo corre en la nube dentro de tu cuenta de Google
+- **Funciona solo** — una vez configurado no hay que tocarlo nunca más
+- **Privado** — los datos no salen de tu ecosistema Google
+- **Configurable** — puedes añadir más palabras clave y tipos de eventos fácilmente
 
 ---
 
-## Paso 2 — Crear el proyecto en Google Apps Script
+## Stack
 
-1. Ve a [script.google.com](https://script.google.com)
-2. Haz clic en **Nuevo proyecto**
-3. Renómbralo (ej: "Bot Calendario Telegram")
-4. Borra el contenido por defecto del editor
+| Capa | Tecnología |
+|---|---|
+| Lógica y ejecución | Google Apps Script |
+| Fuente de datos | Google Calendar API |
+| Notificaciones | Telegram Bot API |
+| Scheduler (cron) | Triggers de Apps Script |
+| Hosting | Google (gratuito, incluido en tu cuenta) |
 
 ---
 
-## Paso 3 — Pegar el código
+## Cómo funciona
 
-Copia y pega el siguiente código completo en el editor, sustituyendo los valores de configuración:
+```
+Cada día a las 8:00
+    → Lee todos los eventos de tu Google Calendar
+    → Busca eventos con la palabra "cumple"
+    → Si encuentra alguno → envía notificación + mensaje sugerido a Telegram
 
-```javascript
-// ── CONFIGURACIÓN ──────────────────────────────────────────
-var TELEGRAM_TOKEN   = "TU_TOKEN_AQUI";       // Token de @BotFather
-var TELEGRAM_CHAT_ID = TU_CHAT_ID_AQUI;       // Número sin comillas
-var BIRTHDAY_KEYWORD = "cumple";
-
-// ── ENVIAR MENSAJE A TELEGRAM ───────────────────────────────
-function sendTelegram(text) {
-  if (!text || text.trim() === "") return;
-  var url = "https://api.telegram.org/bot" + TELEGRAM_TOKEN + "/sendMessage";
-  var payload = {
-    chat_id: TELEGRAM_CHAT_ID,
-    text: text,
-    parse_mode: "Markdown"
-  };
-  var options = {
-    method: "post",
-    contentType: "application/json",
-    payload: JSON.stringify(payload),
-    muteHttpExceptions: true
-  };
-  UrlFetchApp.fetch(url, options);
-}
-
-// ── MÓDULO CUMPLEAÑOS ───────────────────────────────────────
-function checkBirthdays() {
-  var today = new Date();
-  var start = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0);
-  var end   = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
-
-  var calendars = CalendarApp.getAllCalendars();
-  var found = false;
-
-  calendars.forEach(function(cal) {
-    cal.getEvents(start, end).forEach(function(event) {
-      var title = event.getTitle();
-      if (title.toLowerCase().indexOf(BIRTHDAY_KEYWORD) !== -1) {
-        found = true;
-        var name = title.toLowerCase()
-          .replace(BIRTHDAY_KEYWORD, "")
-          .trim();
-        name = name.charAt(0).toUpperCase() + name.slice(1);
-
-        var mensajes = [
-          "¡Feliz cumpleaños, " + name + "! 🎉 Espero que pases un día increíble rodeado de las personas que quieres.",
-          "¡Hoy es tu día, " + name + "! 🥳 Que este año nuevo esté lleno de cosas buenas para ti. ¡Felicidades!",
-          "¡Muchas felicidades, " + name + "! 🎂 Que este año te traiga todo lo que mereces.",
-          "¡Feliz cumple, " + name + "! Espero que lo estés celebrando como se merece. Un abrazo enorme. 🎈"
-        ];
-        var mensaje = mensajes[Math.floor(Math.random() * mensajes.length)];
-        sendTelegram("🎂 *¡Hoy cumple " + name + "!*\n\nMensaje sugerido:\n_" + mensaje + "_");
-      }
-    });
-  });
-}
-
-// ── MÓDULO RESUMEN SEMANAL ──────────────────────────────────
-function weeklySummary() {
-  var now = new Date();
-  var end = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-
-  var emojiMap = {
-    "viaje": "✈️", "vuelo": "✈️", "tren": "🚆",
-    "examen": "📝", "entrega": "📝",
-    "reunión": "💼", "meeting": "💼", "zoom": "💻",
-    "médico": "🏥", "cita": "📋",
-    "gym": "💪", "entreno": "💪",
-    "cumple": "🎂"
-  };
-
-  function getEmoji(title) {
-    var t = title.toLowerCase();
-    for (var key in emojiMap) {
-      if (t.indexOf(key) !== -1) return emojiMap[key];
-    }
-    return "📌";
-  }
-
-  function formatDate(date) {
-    var days = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
-    var d   = days[date.getDay()];
-    var day = String(date.getDate()).padStart(2, "0");
-    var mon = String(date.getMonth() + 1).padStart(2, "0");
-    var h   = String(date.getHours()).padStart(2, "0");
-    var m   = String(date.getMinutes()).padStart(2, "0");
-    return (date.getHours() === 0 && date.getMinutes() === 0)
-      ? d + " " + day + "/" + mon
-      : d + " " + day + "/" + mon + " " + h + ":" + m;
-  }
-
-  var calendars = CalendarApp.getAllCalendars();
-  var lines = ["📅 *Tu semana de un vistazo*\n"];
-  var count = 0;
-
-  calendars.forEach(function(cal) {
-    cal.getEvents(now, end).forEach(function(event) {
-      var title = event.getTitle();
-      if (!title) return;
-      lines.push(getEmoji(title) + " *" + formatDate(event.getStartTime()) + "* — " + title);
-      count++;
-    });
-  });
-
-  if (count === 0) {
-    sendTelegram("📅 *Resumen semanal*\n\nSin eventos esta semana. ¡A descansar! 🎉");
-    return;
-  }
-
-  lines.push("\n_" + count + " evento(s) esta semana_");
-  sendTelegram(lines.join("\n"));
-}
-
-// ── TEST DE CONEXIÓN ────────────────────────────────────────
-function test() {
-  sendTelegram("🤖 Prueba de conexión exitosa");
-}
+Cada lunes a las 8:00
+    → Lee los eventos de los próximos 7 días
+    → Los clasifica por tipo y les asigna emoji
+    → Envía el resumen completo a Telegram
 ```
 
 ---
 
-## Paso 4 — Configurar la zona horaria
+## Requisitos
 
-1. Haz clic en el icono del **engranaje ⚙️** (Configuración del proyecto) en el menú izquierdo
-2. En **Zona horaria** selecciona `Europe/Madrid`
-3. Guarda
+Antes de empezar necesitas tener:
 
----
+- Una cuenta de **Gmail / Google**
+- La app de **Telegram** instalada en el móvil
+- Acceso a [script.google.com](https://script.google.com) desde el navegador
 
-## Paso 5 — Autorizar el acceso al calendario
-
-1. En el desplegable del editor selecciona la función `test`
-2. Pulsa **Ejecutar**
-3. Google te pedirá que autorices permisos — acéptalos
-4. Comprueba que te llega el mensaje "🤖 Prueba de conexión exitosa" en Telegram
-
-Este paso solo ocurre una vez.
+Nada más. Sin Node.js, sin Python, sin terminal.
 
 ---
 
-## Paso 6 — Configurar los triggers (cron)
+## Configuración — paso a paso
 
-1. Haz clic en el icono del **reloj** (Triggers) en el menú izquierdo
-2. Pulsa **Añadir trigger** y crea los dos siguientes:
+### 1. Crear el bot de Telegram
 
-| Función | Tipo de evento | Frecuencia | Hora |
-|---|---|---|---|
-| `checkBirthdays` | Temporizador | Cada día | Entre 8:00 y 9:00 |
-| `weeklySummary` | Temporizador | Cada semana · Lunes | Entre 8:00 y 9:00 |
+Abre Telegram, busca **@BotFather** y sigue sus instrucciones para crear un bot nuevo. Al terminar te dará un **token** — guárdalo.
+
+Para obtener tu **Chat ID** personal, busca **@userinfobot** en Telegram y pulsa Start. Te lo da al momento.
+
+---
+
+### 2. Crear el proyecto en Apps Script
+
+Ve a [script.google.com](https://script.google.com), crea un nuevo proyecto y ponle el nombre que quieras. Borra el contenido por defecto del editor y pega el código del archivo `code.gs`.
+
+---
+
+### 3. Rellenar la configuración
+
+Al inicio del código hay tres variables que debes rellenar con tus datos:
+
+- `TELEGRAM_TOKEN` → el token que te dio BotFather
+- `TELEGRAM_CHAT_ID` → tu ID numérico de Telegram
+- `BIRTHDAY_KEYWORD` → la palabra que el bot buscará en tus eventos (por defecto: `"cumple"`)
+
+---
+
+### 4. Ajustar la zona horaria
+
+En el panel de Apps Script ve a **Configuración del proyecto ⚙️** y cambia la zona horaria a `Europe/Madrid`. Así los triggers se ejecutan en tu hora local.
+
+---
+
+### 5. Autorizar permisos
+
+La primera vez que ejecutes cualquier función, Google pedirá que autorices el acceso a tu calendario. Es un proceso estándar de seguridad de Google — solo ocurre una vez.
+
+Ejecuta la función `test()` para verificar que la conexión con Telegram funciona correctamente antes de continuar.
+
+---
+
+### 6. Activar los triggers
+
+En el panel lateral de Apps Script, abre la sección **Triggers (reloj ⏰)** y crea dos:
+
+| Función | Cuándo se ejecuta |
+|---|---|
+| `checkBirthdays` | Todos los días · entre 8:00 y 9:00 |
+| `weeklySummary` | Cada lunes · entre 8:00 y 9:00 |
+
+Listo. A partir de aquí el bot trabaja solo.
 
 ---
 
 ## Cómo nombrar los eventos de cumpleaños
 
-El bot detecta cualquier evento que contenga la palabra **"cumple"** (sin distinguir mayúsculas):
+El bot detecta cualquier evento que contenga la palabra **"cumple"**, sin importar mayúsculas ni posición:
 
 ```
 ✅ cumple Vanessa
 ✅ Vanessa cumple
 ✅ Cumple de Juan
-✅ cumpleaños Pedro   ← también detecta "cumpleaños"
+✅ cumpleaños Pedro
 ```
 
 ---
 
-## Sincronizar el iPhone con Google Calendar
+## Sincronización con iPhone
 
-Por defecto el calendario nativo del iPhone no sincroniza con Google. Para que el bot lea tus eventos:
+El calendario nativo del iPhone no sincroniza con Google Calendar por defecto. Para que el bot lea también tus eventos del iPhone:
 
-1. En el iPhone ve a **Ajustes → Calendario → Cuentas → Añadir cuenta → Google**
-2. Inicia sesión con la misma cuenta de Gmail del script
+1. Ve a **Ajustes → Calendario → Cuentas → Añadir cuenta → Google**
+2. Inicia sesión con la misma cuenta de Gmail que usas en Apps Script
 3. Activa la sincronización de Calendarios
 4. Ve a **Ajustes → Calendario → Calendario por omisión** y selecciona el de Gmail
 
-A partir de ahí los eventos nuevos del iPhone se sincronizan automáticamente con Google Calendar.
+Desde ese momento, los eventos que crees en el iPhone aparecerán automáticamente en Google Calendar y el bot los leerá sin problemas.
 
 ---
 
-## Estructura del código
+## Ejemplo de mensajes en Telegram
 
+**Notificación de cumpleaños:**
 ```
-Apps Script (script.google.com)
-│
-├── sendTelegram(text)       — función base de envío
-├── checkBirthdays()         — detecta "cumple" en eventos del día
-├── weeklySummary()          — resumen de eventos de los próximos 7 días
-└── test()                   — prueba de conexión
+🎂 ¡Hoy cumple Vanessa!
+
+Mensaje sugerido:
+¡Feliz cumpleaños, Vanessa! 🎉 Espero que pases un día increíble
+rodeado de las personas que quieres.
+```
+
+**Resumen semanal:**
+```
+📅 Tu semana de un vistazo
+
+✈️ Lun 14/04 — Vuelo Madrid-Lisboa
+📝 Mié 16/04 — Examen certificación
+💼 Jue 17/04 10:00 — Reunión con cliente
+🏥 Vie 18/04 09:30 — Cita médica
+
+4 evento(s) esta semana
 ```
 
 ---
 
 ## Solución de problemas
 
-**No llega ningún mensaje**
-Ejecuta la función `test()` manualmente desde el editor. Si no llega nada, revisa que el token y el chat_id sean correctos.
+**No llega ningún mensaje**  
+Ejecuta `test()` manualmente desde el editor. Si no llega nada, revisa el token y el chat_id.
 
-**Error 400 "message text is empty"**
-Asegúrate de que la función `sendTelegram` tenga el guard `if (!text || text.trim() === "") return;` al inicio.
+**Error 400 "message text is empty"**  
+Comprueba que la función `sendTelegram` tenga la validación de texto vacío al inicio.
 
-**No detecta cumpleaños**
-Comprueba que el evento en Google Calendar contiene exactamente la palabra "cumple". Ejecuta esta función de diagnóstico:
+**No detecta cumpleaños**  
+Asegúrate de que el evento en Google Calendar contiene exactamente la palabra "cumple". Usa la función `debugCalendar()` para ver qué eventos está leyendo el script.
 
-```javascript
-function debugCalendar() {
-  var today = new Date();
-  var start = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0);
-  var end   = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7, 23, 59, 59);
-  var calendars = CalendarApp.getAllCalendars();
-  Logger.log("Calendarios: " + calendars.length);
-  calendars.forEach(function(cal) {
-    Logger.log("→ " + cal.getName());
-    cal.getEvents(start, end).forEach(function(e) {
-      Logger.log("   " + e.getTitle());
-    });
-  });
-}
-```
-
-**Los triggers se ejecutan a deshora**
-Verifica que la zona horaria del proyecto esté configurada en `Europe/Madrid` (Configuración ⚙️ del proyecto).
+**Los triggers se ejecutan a deshora**  
+Verifica que la zona horaria del proyecto esté en `Europe/Madrid`.
 
 ---
 
 ## Seguridad
 
-- El token de Telegram y el chat_id están directamente en el código dentro de Apps Script, que es privado a tu cuenta de Google
-- No subas este archivo a ningún repositorio público sin eliminar las credenciales
-- Si el token se compromete, revócalo desde @BotFather con el comando `/revoke`
+- El código y las credenciales viven dentro de tu cuenta privada de Google Apps Script
+- Nadie más tiene acceso a tu script salvo tú
+- Si el token de Telegram se compromete, revócalo desde @BotFather con `/revoke` y genera uno nuevo
+- No compartas ni subas el archivo con credenciales a repositorios públicos
+
+---
+
+## Posibles mejoras futuras
+
+- Soporte para múltiples calendarios seleccionados por nombre
+- Resumen diario opcional además del semanal
+- Integración con Google Tasks
+- Personalización de mensajes de cumpleaños por persona
+- Notificaciones de recordatorio con X horas de antelación
+
+---
+
+*Hecho con Google Apps Script · Telegram Bot API · y ganas de no olvidar más cumpleaños.*
