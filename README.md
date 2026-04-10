@@ -1,7 +1,5 @@
 # 🤖  CalendarBot — Automatización con calendario
 
-**Automatiza tu calendario y recíbelo en Telegram.**
-
 Automatización 100% gratuita que envía tus eventos directamente a Telegram, manteniéndote al día con tu calendario sin apps extra, sin suscripciones y sin complicaciones.
 
 ---
