@@ -21,7 +21,7 @@ Antes de que empiece la semana, recibes un resumen con todos tus eventos ordenad
 
 ---
 
-## Por qué mola
+## ¿Por qué mola?
 
 - **Coste total: 0 €** — ni tarjeta, ni servidor, ni suscripción
 - **Sin instalaciones** — todo corre en la nube dentro de tu cuenta de Google
@@ -43,7 +43,7 @@ Antes de que empiece la semana, recibes un resumen con todos tus eventos ordenad
 
 ---
 
-## Cómo funciona
+## ¿Cómo funciona?
 
 ```
 Cada día a las 8:00
@@ -124,7 +124,7 @@ Listo. A partir de aquí el bot trabaja solo.
 
 ---
 
-## Cómo nombrar los eventos de cumpleaños
+## ¿Cómo nombrar los eventos de cumpleaños?
 
 El bot detecta cualquier evento que contenga la palabra **"cumple"**, sin importar mayúsculas ni posición:
 
